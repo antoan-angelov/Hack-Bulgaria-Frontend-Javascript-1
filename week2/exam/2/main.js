@@ -46,7 +46,7 @@ $(function() {
   }
 
   function displayTime(actualSeconds) {
-    var minutes = Math.floor(actualSeconds/60),
+    var minutes = Math.floor( actualSeconds / 60 ),
         seconds = actualSeconds % 60,
         minutesString = format(minutes),
         secondsString = format(seconds);
