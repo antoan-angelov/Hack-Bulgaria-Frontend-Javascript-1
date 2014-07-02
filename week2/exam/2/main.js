@@ -23,8 +23,10 @@ $(function() {
   function startTimer(type) {
     var $minutes = $("#minutes"),
         $seconds = $("#seconds"),
-        minutes = parseInt( $minutes.val() ),
-        seconds = parseInt( $seconds.val() );
+        minutesVal = $minutes.val( ),
+        secondsVal = $seconds.val( ),
+        minutes = minutesVal.length > 0 ? parseInt( minutesVal, 10 ) : 0,
+        seconds = secondsVal.length > 0 ? parseInt( secondsVal, 10 ) : 0;
 
     secondsCount = secondsLeft = minutes * 60 + seconds;
     countType = type;
@@ -65,6 +67,6 @@ $(function() {
   }
 
   function format(num) {
-    return num < 10 ? "0"+num : num+"";
+    return num < 10 ? "0" + num : num + "";
   }
 });
