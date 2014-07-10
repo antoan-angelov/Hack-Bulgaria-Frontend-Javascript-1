@@ -6,8 +6,15 @@ $(function() {
       W = $canvas.width()/UNIT_TO_PX,
       H = $canvas.height() / UNIT_TO_PX,
       fps = 12,
-      snake = new Snake(c),
-      treat = getRandomTreat();
+      snake,
+      treat;
+
+  function startGame() {
+    snake = new Snake(c);
+    treat = getRandomTreat();
+  }
+
+  startGame();
 
   ctx.fillStyle = "green";
 
@@ -63,6 +70,7 @@ $(function() {
       }
       else {
         snake.setAlive(false);
+        setTimeout(startGame, 3000);
       }
 
       this.checkTreat();
