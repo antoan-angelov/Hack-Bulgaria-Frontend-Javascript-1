@@ -46,7 +46,7 @@ $(function() {
 
     this.update = function() {
 
-      if(this.isAlive())
+      if(!this.isAlive())
         return;
 
       var head = this.tiles[this.tiles.length-1],
