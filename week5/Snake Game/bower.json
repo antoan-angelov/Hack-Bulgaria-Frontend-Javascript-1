@@ -1,0 +1,19 @@
+{
+  "name": "Snake Game",
+  "version": "0.0.0",
+  "homepage": "https://github.com/antoan-angelov/Hack-Bulgaria-Frontend-Javascript-1",
+  "authors": [
+    "Antoan Angelov <antoan.angelov@gmail.com>"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery": "~2.1.1"
+  }
+}
