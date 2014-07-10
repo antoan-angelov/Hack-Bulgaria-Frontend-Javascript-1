@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap-theme.min.css">
+  <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css"> 
+	<title></title>
+  <style>
+  .table {
+    width: 800px;
+  }
+  .faculty-number {
+
+  }
+
+  .name {
+
+  }
+
+  .courses {
+
+  }
+
+  .actions {
+    width: 140px;
+  }
+
+  #add-student {
+    margin: 10px;
+  }
+  
+  #modal-name {
+    margin: 10px 0;
+  }
+
+  </style>
+</head>
+<body>
+
+<button type="button" id="add-student" class="btn btn-primary" data-toggle="modal" data-target="#myModal">Add Student</button>
+
+<table class="table table-hover table-bordered table-striped">
+  <thead>
+    <tr>
+      <th>Faculty #</th>
+      <th>Name</th>
+      <th>Courses</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody id="cont">
+  </tbody>
+</table>
+
+<script id="row-template" type="text/x-handlebars-template">
+{{#each students}}
+  <tr>
+    <td class="faculty-number">{{facultyNumber}}</td>
+    <td class="name">{{name}}</td>
+    <td class="courses">
+      {{#list courses}}{{this}}{{/list}}
+    </td>
+    <td class="actions">
+      <button type="button" class="btn btn-primary btn-student-edit" data-student-id="{{facultyNumber}}" data-toggle="modal" data-target="#myModal">Edit</button>
+      <button type="button" class="btn btn-danger btn-student-delete" data-student-id="{{facultyNumber}}">Delete</button>
+    </td>
+  </tr>
+{{/each}}
+</script>
+
+<div class="modal fade" id="myModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title">Student</h4>
+      </div>
+      <div class="modal-body">
+        <input type="text" class="form-control" id="modal-number" placeholder="Faculty Number">
+        <input type="text" class="form-control" id="modal-name" placeholder="Name">
+        <div>Select student courses:</div>
+        <select id="modal-courses" multiple class="form-control">
+          <option>Calculus</option>
+          <option>Algebra</option>
+          <option>Algorithms</option>
+          <option>Functional Programming</option>
+          <option>Computer Architectures</option>
+        </select>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" data-dismiss="modal" id="modal-save">Save changes</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+<script src="bower_components/jquery/dist/jquery.min.js"></script>
+<script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+<script src="bower_components/handlebars/handlebars.min.js"></script>
+<script src="handlebars.helpers.js"></script>
+<script src="client.js"></script>
+</body>
+</html>
