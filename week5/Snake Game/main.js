@@ -11,8 +11,7 @@ $(function() {
       treat,
       timerId = -1,
       points = 0,
-      reverse = false,
-      anyKeyToContinueText = true;
+      reverse = false;
 
   if(!localStorage.scores)
     localStorage.scores = JSON.stringify([]);
@@ -51,8 +50,8 @@ $(function() {
       return b.score - a.score;
     });
 
-    if(scores.length > 5)
-      scores = scores.slice(0, 5);
+    if(scores.length > 10)
+      scores = scores.slice(0, 10);
 
     localStorage.scores = JSON.stringify(scores);
   });
@@ -94,7 +93,6 @@ $(function() {
   }
 
   function pressAnyKeyToContinue() {
-    anyKeyToContinueText = true;
     visible = true;
     labelTimer = setInterval(function() {
       visible = !visible;
@@ -102,8 +100,8 @@ $(function() {
     }, 700);
     $(document).unbind('keydown');
     initKeyboardController(function() {
+      visible = false;
       $(document).unbind('keydown');
-      anyKeyToContinueText = false;
       resume();
       initKeyboardController(Snake.prototype.keyboardHandler);
       if(labelTimer != -1)
@@ -217,8 +215,6 @@ $(function() {
           fps = 20;
           break;
       }
-
-
     }
 
     this.setSpeed(this.speed);
@@ -247,7 +243,6 @@ $(function() {
         snake.setAlive(false);
         $("#modal-died-score").text(points);
         $('#enterNameModal').modal("show");
-        //setTimeout(startGame, 3000);
       }
 
       if(this.checkTreat()) {
@@ -371,7 +366,7 @@ $(function() {
     snake.draw();
     treat.draw();
 
-    if(anyKeyToContinueText && visible) {
+    if(visible) {
       var fillStyle = ctx.fillStyle;
       ctx.fillStyle = "white";
       ctx.font = "25px myFont";
