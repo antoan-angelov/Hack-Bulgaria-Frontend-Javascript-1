@@ -11,7 +11,8 @@ $(function() {
       treat,
       timerId = -1,
       points = 0,
-      reverse = false;
+      reverse = false,
+      anyKeyToContinueText = true;
 
   if(!localStorage.scores)
     localStorage.scores = JSON.stringify([]);
@@ -65,6 +66,8 @@ $(function() {
     localStorage.snake_color = snake_color;
     snake.setSpeed(parseInt(snake_speed, 10));
     snake.setColor(snake_color);
+    pause();
+    resume();
 
     if(reverse) {
       snake.reverse();
@@ -87,12 +90,32 @@ $(function() {
 
   function resume() {
     if(timerId == -1)
-      timerId = setInterval(render, 1000 / fps);
+      timerId = setInterval(loop, 1000 / fps);
+  }
+
+  function pressAnyKeyToContinue() {
+    anyKeyToContinueText = true;
+    visible = true;
+    labelTimer = setInterval(function() {
+      visible = !visible;
+      render();
+    }, 700);
+    $(document).unbind('keydown');
+    initKeyboardController(function() {
+      $(document).unbind('keydown');
+      anyKeyToContinueText = false;
+      resume();
+      initKeyboardController(Snake.prototype.keyboardHandler);
+      if(labelTimer != -1)
+        clearInterval(labelTimer);
+      labelTimer = -1;
+    });
   }
 
   function startGame() {
+    pressAnyKeyToContinue();
+
     pause();
-    resume();
     points = 0;
     reverse = false;
     snake = new Snake(c);
@@ -100,12 +123,17 @@ $(function() {
     grass.src = 'grass.png';
     background = new Background(c, grass);
     var bullet = document.createElement("IMG");
-    bullet.src = 'bullet.png';
     treat = new Treat(0, 0, c, bullet);
     treat.randomize();
     $("#modal-color").val(snake.getColor());
     $("#modal-speed").val(snake.getSpeed());
-    render();
+
+    grass.onload = function() {
+      bullet.src = 'bullet.png';
+      bullet.onload = function() {
+        render();
+      }
+    }
   }
 
   function Tile(x, y, context, texture) {
@@ -116,10 +144,12 @@ $(function() {
   }
 
   Tile.prototype.draw = function() {
+
     if(!this.texture)
       ctx.fillRect(this.x * UNIT_TO_PX, this.y * UNIT_TO_PX, UNIT_TO_PX, UNIT_TO_PX);
-    else
+    else {
       ctx.drawImage(this.texture, this.x * UNIT_TO_PX, this.y * UNIT_TO_PX, UNIT_TO_PX, UNIT_TO_PX);
+    }
   }
 
   function Treat(x, y, context, texture) {
@@ -188,8 +218,7 @@ $(function() {
           break;
       }
 
-      pause();
-      resume();
+
     }
 
     this.setSpeed(this.speed);
@@ -308,11 +337,10 @@ $(function() {
     }
   };
 
-  initKeyboardController(Snake.prototype.keyboardHandler);
-
   function Background(context, texture) {
 
     var tiles = [];
+    var that = this;
 
     for(var i=0; i<W * H; i++) {
       tiles[i] = new Tile(i%W, Math.floor(i/H), context, texture);
@@ -325,12 +353,31 @@ $(function() {
     };
   }
 
+  function loop() {
+    update();
+    render();
+  }
+
+  function update() {
+    snake.update();
+  }
+
+  var visible;
+  var labelTimer;
+
   function render() {
     ctx.clearRect(0, 0, W * UNIT_TO_PX, H * UNIT_TO_PX);
-    snake.update();
     background.draw();
     snake.draw();
     treat.draw();
+
+    if(anyKeyToContinueText && visible) {
+      var fillStyle = ctx.fillStyle;
+      ctx.fillStyle = "white";
+      ctx.font = "25px myFont";
+      ctx.fillText("Press Any Key", 50, 190);
+      ctx.fillStyle = fillStyle;
+    }
   }
 
   function initKeyboardController(callback) {
