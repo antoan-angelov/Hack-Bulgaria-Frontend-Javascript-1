@@ -1,16 +1,140 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css">
   <title></title>
   <style>
   #playground {
     border: 1px black solid;
   }
+  #options {
+    margin: 15px;
+  }
+  #modal-speed {
+    display: inline-block;
+    width: 160px;
+  }
+  #btn-settings {
+    position: absolute;
+    left: 410px;
+  }
+  #highScores {
+    z-index: 1051;
+  }
+  .table {
+    width: 200px;
+  }
   </style>
 </head>
 <body>
-<canvas id="playground" width="400" height="400"></canvas>
-<script src="bower_components/jquery/dist/jquery.min.js"></script>
-<script src="main.js"></script>
+  <canvas id="playground" width="400" height="400"></canvas>
+  <button type="button" class="btn btn-default" id="btn-settings" data-toggle="modal" data-target="#myModal">
+    <span class="glyphicon glyphicon-cog"></span>
+  </button>
+
+  <!-- High Scores Modal -->
+  <div class="modal fade" id="highScores" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+          <h4 class="modal-title" id="myModalLabel">Wall of Fame</h4>
+        </div>
+        <div class="modal-body">
+          <table class="table" id="highScoresTable">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Score</th>
+              </tr>
+            </thead>
+            <tbody>
+              
+            </tbody>
+          </table>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Enter Name Modal -->
+  <div class="modal fade" id="enterNameModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+          <h4 class="modal-title" id="myModalLabel">You died! Your score is <span id="modal-died-score"></span>.</h4>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="modal-name">Your name:</label>
+            <input type="text" class="form-control" id="modal-name" placeholder="Enter your name">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="save-score" class="btn btn-primary" data-dismiss="modal">Save score</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+          <h4 class="modal-title" id="myModalLabel">Settings</h4>
+        </div>
+        <div class="modal-body">
+          Points: <span id="modal-points">0</span>
+
+          <div>
+            Speed: <input type="range" name="speed" id="modal-speed" min="1" max="3">
+          </div>
+
+          <div>
+            Color: <input type="color" name="color" id="modal-color">
+          </div>
+
+          Use button P to pause/unpause.
+
+          <div class="checkbox">
+            <label>
+              <input type="checkbox" id="modal-reverse" value="">
+                Reverse snake (Use button R to reverse).
+            </label>
+          </div>
+
+          <button type="button" class="btn btn-default" data-toggle="modal" data-target="#highScores">
+            <span class="glyphicon glyphicon glyphicon-list"></span> High Scores
+          </button>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          <button type="button" id="save-changes" class="btn btn-primary" data-dismiss="modal">Save changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script id="row-template" type="text/x-handlebars-template">
+    {{#each scores}}
+    sd
+    <tr>
+      <td>{{name}}</td>
+      <td>{{score}}</td>
+    </tr>
+    {{/each}}
+  </script>
+
+  <script src="bower_components/jquery/dist/jquery.min.js"></script>
+  <script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+  <script src="bower_components/handlebars/handlebars.min.js"></script>
+  <script src="main.js"></script>
 </body>
 </html>

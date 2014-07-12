@@ -7,35 +7,144 @@ $(function() {
       H = $canvas.height() / UNIT_TO_PX,
       fps = 12,
       snake,
-      treat;
+      background,
+      treat,
+      timerId = -1,
+      points = 0,
+      reverse = false;
 
-  function startGame() {
-    snake = new Snake(c);
-    treat = getRandomTreat();
+  if(!localStorage.scores)
+    localStorage.scores = JSON.stringify([]);
+
+  $("#btn-settings").click(function() {
+    pause();
+    $("#modal-color").val(snake.getColor());
+    $("#modal-speed").val(snake.getSpeed());
+    $("#modal-points").text(points);
+  });
+
+  $('#myModal').on('hidden.bs.modal', function() {
+    resume();
+  });
+
+  $('#enterNameModal').on('hidden.bs.modal', function() {
+    $("#modal-name").val("");
+    startGame();
+  });
+
+  $('#highScores').on('shown.bs.modal', function() {
+
+    var source   = $("#row-template").html();
+    var template = Handlebars.compile(source);
+    var html = template({"scores" : JSON.parse(localStorage.scores)});
+    $("#highScoresTable tbody").html(html);
+  });
+
+  $("#save-score").click(function() {
+    var scores = JSON.parse(localStorage.scores);
+    var score = {"name" : $("#modal-name").val(), "score" : points};
+
+    scores.push(score);
+
+    scores.sort(function(a, b) {
+      return b.score - a.score;
+    });
+
+    if(scores.length > 5)
+      scores = scores.slice(0, 5);
+
+    localStorage.scores = JSON.stringify(scores);
+  });
+
+  $("#save-changes").click(function() {
+
+    var snake_speed = $("#modal-speed").val();
+    var snake_color = $("#modal-color").val();
+
+    localStorage.snake_speed = snake_speed;
+    localStorage.snake_color = snake_color;
+    snake.setSpeed(parseInt(snake_speed, 10));
+    snake.setColor(snake_color);
+
+    if(reverse) {
+      snake.reverse();
+      reverse = false;
+      $("#modal-reverse").prop("checked", false);
+    }
+  });
+
+  $("#modal-reverse").on("change", function() {
+    var isChecked = $(this).prop("checked");
+    if(isChecked)
+      reverse = true;
+  });
+
+  function pause() {
+    if(timerId != -1)
+      clearInterval(timerId);
+    timerId = -1;
   }
 
-  startGame();
+  function resume() {
+    if(timerId == -1)
+      timerId = setInterval(render, 1000 / fps);
+  }
 
-  ctx.fillStyle = "green";
+  function startGame() {
+    pause();
+    resume();
+    points = 0;
+    reverse = false;
+    snake = new Snake(c);
+    var grass = document.createElement("IMG");
+    grass.src = 'grass.png';
+    background = new Background(c, grass);
+    var bullet = document.createElement("IMG");
+    bullet.src = 'bullet.png';
+    treat = new Treat(0, 0, c, bullet);
+    treat.randomize();
+    $("#modal-color").val(snake.getColor());
+    $("#modal-speed").val(snake.getSpeed());
+    render();
+  }
 
-  function Tile(x, y, context) {
+  function Tile(x, y, context, texture) {
     this.x = x;
     this.y = y;
     this.context = context;
+    this.texture = texture;
+  }
 
-    this.draw = function() {
-      ctx.fillRect(this.x * UNIT_TO_PX, this.y * UNIT_TO_PX, 10, 10);
+  Tile.prototype.draw = function() {
+    if(!this.texture)
+      ctx.fillRect(this.x * UNIT_TO_PX, this.y * UNIT_TO_PX, UNIT_TO_PX, UNIT_TO_PX);
+    else
+      ctx.drawImage(this.texture, this.x * UNIT_TO_PX, this.y * UNIT_TO_PX, UNIT_TO_PX, UNIT_TO_PX);
+  }
+
+  function Treat(x, y, context, texture) {
+
+    this.x = x;
+    this.y = y;
+    this.context = context;
+    this.texture = texture;
+
+    this.randomize = function() {
+      var x = Math.floor(Math.random() * W),
+        y = Math.floor(Math.random() * H);
+
+      this.x = x;
+      this.y = y;
     }
   }
 
-  function getRandomTreat() {
-    var x = Math.floor(Math.random() * W),
-        y = Math.floor(Math.random() * H);
-    return new Tile(x, y, c)
-  }
+  Treat.prototype.draw = Tile.prototype.draw;
 
   function Snake(context) {
+    var that = this;
     this.context = context;
+    this.color = (localStorage.snake_color ? localStorage.snake_color : "#5EFF71");
+    this.speed = (localStorage.snake_speed ? parseInt(localStorage.snake_speed) : 2);
     this.state = "alive";
     this.dir = {x: 1, y: 0};
     this.oldDir = {x: 1, y: 0};
@@ -47,12 +156,49 @@ $(function() {
       return this.state === "alive";
     }
 
+    this.getColor = function() {
+      return this.color;
+    }
+
+    this.setColor = function(color) {
+      this.color = color;
+    };
+
+    this.reverse = function() {
+      this.tiles.reverse();
+      this.dir.x *= -1;
+      this.dir.y *= -1;
+    };
+
+    this.getSpeed = function() {
+      return this.speed;
+    }
+
+    this.setSpeed = function(speed) {
+      that.speed = speed;
+      switch(speed) {
+        case 1:
+          fps = 6;
+          break;
+        case 2:
+          fps = 10;
+          break;
+        case 3:
+          fps = 20;
+          break;
+      }
+
+      pause();
+      resume();
+    }
+
+    this.setSpeed(this.speed);
+
     this.setAlive = function(alive) {
       this.state = (alive ? "alive" : "dead");
     }
 
     this.update = function() {
-
       if(!this.isAlive())
         return;
 
@@ -70,10 +216,19 @@ $(function() {
       }
       else {
         snake.setAlive(false);
-        setTimeout(startGame, 3000);
+        $("#modal-died-score").text(points);
+        $('#enterNameModal').modal("show");
+        //setTimeout(startGame, 3000);
       }
 
-      this.checkTreat();
+      if(this.checkTreat()) {
+        treat.randomize();
+        points++;
+        var tail = this.tiles[0];
+        var newTail = new Tile(tail.x, tail.y, context);
+        this.tiles.unshift(newTail);
+      }
+
       this.oldDir.x = this.dir.x;
       this.oldDir.y = this.dir.y;
     };
@@ -94,17 +249,15 @@ $(function() {
 
     this.checkTreat = function() {
       var head = this.tiles[this.tiles.length-1];
-      if(head.x == treat.x && head.y == treat.y) {
-        treat = getRandomTreat();
-        var tail = this.tiles[0];
-        var newTail = new Tile(tail.x, tail.y, context);
-        this.tiles.unshift(newTail);
-      }
+      return (head.x == treat.x && head.y == treat.y);
     }
 
     this.draw = function() {
       if(!this.isAlive()) {
         ctx.fillStyle = "red"
+      }
+      else {
+        ctx.fillStyle = this.color;
       }
 
       this.tiles.forEach(function(tile) {
@@ -112,7 +265,7 @@ $(function() {
       });
 
       if(!this.isAlive()) {
-        ctx.fillStyle = "green"
+        ctx.fillStyle = this.color;
       }
     };
   }
@@ -143,29 +296,56 @@ $(function() {
           snake.dir.y = 0;
         }
         break;
+      case "pause":
+        if(timerId != -1)
+          pause();
+        else
+          resume();
+        break;
+      case "reverse":
+        snake.reverse();
+        break;
     }
   };
 
   initKeyboardController(Snake.prototype.keyboardHandler);
 
-  render();
-  setInterval(render, 1000 / fps);
+  function Background(context, texture) {
+
+    var tiles = [];
+
+    for(var i=0; i<W * H; i++) {
+      tiles[i] = new Tile(i%W, Math.floor(i/H), context, texture);
+    }
+
+    this.draw = function() {
+      tiles.forEach(function(tile) {
+        tile.draw();
+      });
+    };
+  }
 
   function render() {
     ctx.clearRect(0, 0, W * UNIT_TO_PX, H * UNIT_TO_PX);
     snake.update();
+    background.draw();
     snake.draw();
     treat.draw();
   }
 
   function initKeyboardController(callback) {
-    var dict = {"38" : "up",
-                "40" : "down",
-                "37" : "left",
-                "39" : "right"};
+    var dict = {38 : "up",
+                40 : "down",
+                37 : "left",
+                39 : "right",
+                80 : "pause",
+                82: "reverse"
+              };
 
     $(document).keydown(function( event ) {
       callback(dict[event.which]);
     });
   }
+
+  startGame();
 });
