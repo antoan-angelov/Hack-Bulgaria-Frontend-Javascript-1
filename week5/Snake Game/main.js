@@ -11,6 +11,7 @@ $(function() {
       treat,
       timerId = -1,
       points = 0,
+      playing = false,
       reverse = false;
 
   if(!localStorage.scores)
@@ -24,7 +25,8 @@ $(function() {
   });
 
   $('#myModal').on('hidden.bs.modal', function() {
-    resume();
+    if(playing)
+      resume();
   });
 
   $('#enterNameModal').on('hidden.bs.modal', function() {
@@ -65,8 +67,10 @@ $(function() {
     localStorage.snake_color = snake_color;
     snake.setSpeed(parseInt(snake_speed, 10));
     snake.setColor(snake_color);
-    pause();
-    resume();
+    if(playing) {
+      pause();
+      resume();
+    }
 
     if(reverse) {
       snake.reverse();
@@ -100,6 +104,7 @@ $(function() {
     }, 700);
     $(document).unbind('keydown');
     initKeyboardController(function() {
+      playing = true;
       visible = false;
       $(document).unbind('keydown');
       resume();
@@ -111,6 +116,7 @@ $(function() {
   }
 
   function startGame() {
+    playing = false;
     pressAnyKeyToContinue();
 
     pause();
@@ -241,6 +247,7 @@ $(function() {
       }
       else {
         snake.setAlive(false);
+        playing = false;
         $("#modal-died-score").text(points);
         $('#enterNameModal').modal("show");
       }
