@@ -34,6 +34,11 @@
      top: 20px;
      float: left;
   }
+
+  #pages-cont {
+    clear: both;
+    margin-left: 330px;
+  }
   </style>
 </head>
 <body>
@@ -81,6 +86,19 @@
     </div>
   </div>
 
+  <div id="pages-cont"></div>
+
+  <script id="pages-template" type="text/x-handlebars-template">
+    <ul class="pagination">
+      <li><a href="#" id="btn-prev-page">&laquo;</a></li>
+      {{#each pages}}
+      <li><a href="#" class="btn-page">{{this}}</a></li>
+      {{/each}}
+      <li><a href="#" id="btn-next-page">&raquo;</a></li>
+    </ul>
+  </script>
+
+  <script src="bower_components/handlebars/handlebars.min.js"></script>
   <script src="bower_components/jquery/dist/jquery.min.js"></script>
   <script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
   <script src="bower_components/chartjs/Chart.min.js"></script>

@@ -15,6 +15,9 @@ $(function() {
       groups = [COURSE_JS, COURSE_JAVA],
       current_course = COURSE_JS,
       current_group = 0,
+      num_pages,
+      current_page = -1,
+      grouped_students,
       chart_type = "day",
       months = ["January", "February", "March", "April", "May", "June",
         "July", "August", "September", "October", "November", "December"];
@@ -22,14 +25,19 @@ $(function() {
   // Get the context of the canvas element we want to select
   var ctx = $("#myChart").get(0).getContext("2d");
 
+  var pagesSource = $("#pages-template").html();
+  var pagesTemplate = Handlebars.compile(pagesSource);
+
   $("input[name=courses]").change(function () {
     current_course = $(this).val();
-    processData(all_students, current_course, current_group, chart_type);
+    current_page = -1;
+    grouped_students = processData(all_students, current_course, current_group, chart_type, current_page);
   });
 
   $("input[name=types]").change(function () {
     chart_type = $(this).val();
-    processData(all_students, current_course, current_group, chart_type);
+    current_page = -1;
+    grouped_students = processData(all_students, current_course, current_group, chart_type, current_page);
   });
 
   $("input[type='checkbox']").on('change', function(){
@@ -46,7 +54,8 @@ $(function() {
       current_group = GROUP_ALL;
     }
 
-    processData(all_students, current_course, current_group, chart_type);
+    current_page = -1;
+    grouped_students = processData(all_students, current_course, current_group, chart_type, current_page);
   });
 
   function addDataset(datasets, name, data) {
@@ -60,12 +69,18 @@ $(function() {
               });
   }
 
-  function processData(students, course, group, type) {
-    var groupedByDates = groupBy(all_students, course, group, type),
+  function processData(students, course, group, type, page) {
+    var groupedByDates = (page == -1 ? groupBy(all_students, course, group, type) : grouped_students),
         dates = Object.keys(groupedByDates),
-        recentDates = dates.slice(dates.length-5),
         visits = [],
-        max = 0,
+        max = 0;
+
+    if(page == -1) {
+      page = 1;
+      current_page = 1;
+    }
+
+    var recentDates = dates.slice(Math.max(dates.length-5*page, 0), Math.min(dates.length-5*(page-1), dates.length)),
         data = {
           labels: recentDates,
           datasets: []
@@ -82,14 +97,45 @@ $(function() {
         max = numVisitors;
     });
 
+    num_pages = Math.ceil(dates.length / 5);
+
+    var pages = [];
+    for(var i=1; i<= num_pages; i++)
+      pages.push(i);
+
+    populatePages(pages);
+
     new Chart(ctx).Bar(data, {scaleOverride: true,
       scaleStepWidth: Math.ceil(max/20), scaleSteps: 20});
+
+    return groupedByDates;
+  }
+
+  function populatePages(pages) {
+    var html = pagesTemplate({"pages" : pages});
+    $("#pages-cont").html(html);
+
+    $("#btn-prev-page").click(function() {
+      if(current_page - 1 >= 1)
+        processData(all_students, current_course, current_group, chart_type, --current_page);
+    });
+
+    $("#btn-next-page").click(function() {
+      if(current_page + 1 <= num_pages)
+        processData(all_students, current_course, current_group, chart_type, ++current_page);
+    });
+
+    $(".btn-page").click(function() {
+      current_page = parseInt($(this).text());
+      processData(all_students, current_course, current_group, chart_type, current_page);
+    });
   }
 
   $.getJSON("https://hackbulgaria.com/api/checkins/")
   .done(function(data) {
     all_students = data;
-    processData(all_students, current_course, current_group, chart_type);
+    current_page = -1;
+    grouped_students = processData(all_students, current_course, current_group, chart_type, current_page);
   });
 
   function hasCourse(student) {
