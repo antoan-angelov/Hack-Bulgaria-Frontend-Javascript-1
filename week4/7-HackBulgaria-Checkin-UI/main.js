@@ -1,28 +1,35 @@
 "use strict";
 
 $(function() {
-  var all_students;
-  var COURSE_JS = "Frontend JavaScript";
-  var COURSE_JAVA = "Core Java";
-  var groups = [COURSE_JS, COURSE_JAVA];
-  var current_course = COURSE_JS;
-  var current_group = 0;
-  var chart_type = "day";
-  var months = ["January", "February", "March", "April",
-    "May", "June", "July", "August", "September", "October", "November", "December"];
+  var MILLIS_IN_A_WEEK = 1000 * 60 * 60 * 24 * 7,
+      FIRST_LECTURE_TIMESTAMP = Date.parse("2014-05-26"),
+      GROUP_JS = 1,
+      GROUP_JAVA = 2,
+      GROUP_ALL = 0,
+      TYPE_DAY = "day",
+      TYPE_WEEK = "week",
+      TYPE_MONTH = "month",
+      COURSE_JS = "Frontend JavaScript",
+      COURSE_JAVA = "Core Java",
+      all_students,
+      groups = [COURSE_JS, COURSE_JAVA],
+      current_course = COURSE_JS,
+      current_group = 0,
+      chart_type = "day",
+      months = ["January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"];
 
   // Get the context of the canvas element we want to select
   var ctx = $("#myChart").get(0).getContext("2d");
-  var myNewChart;
 
   $("input[name=courses]").change(function () {
     current_course = $(this).val();
-    getPerDayData(all_students, current_course, current_group, chart_type);
+    processData(all_students, current_course, current_group, chart_type);
   });
 
   $("input[name=types]").change(function () {
     chart_type = $(this).val();
-    getPerDayData(all_students, current_course, current_group, chart_type);
+    processData(all_students, current_course, current_group, chart_type);
   });
 
   $("input[type='checkbox']").on('change', function(){
@@ -30,16 +37,16 @@ $(function() {
     var val2 = $("#group2").prop("checked");
 
     if(val1 && !val2) {
-      current_group = 1;
+      current_group = GROUP_JS;
     }
     else if(!val1 && val2) {
-      current_group = 2;
+      current_group = GROUP_JAVA;
     }
     else if(val1 && val2) {
-      current_group = 0;
+      current_group = GROUP_ALL;
     }
 
-    getPerDayData(all_students, current_course, current_group, chart_type);
+    processData(all_students, current_course, current_group, chart_type);
   });
 
   function addDataset(datasets, name, data) {
@@ -53,37 +60,36 @@ $(function() {
               });
   }
 
-  function getPerDayData(students, course, group, type) {
-    var groupedByDates = groupBy(all_students, course, group, type);
-    var dates = Object.keys(groupedByDates);
-    var recentDates = dates.slice(dates.length-5);
-    var visits = [];
-    var max = 0;
-    var data = {
-      labels: recentDates,
-      datasets: []
-    };
+  function processData(students, course, group, type) {
+    var groupedByDates = groupBy(all_students, course, group, type),
+        dates = Object.keys(groupedByDates),
+        recentDates = dates.slice(dates.length-5),
+        visits = [],
+        max = 0,
+        data = {
+          labels: recentDates,
+          datasets: []
+        };
 
     addDataset(data.datasets, course, visits);
 
     recentDates.forEach(function(date) {
-      var courses = groupedByDates[date];
-      var numVisitors = (courses[course] ? courses[course].length : 0);
+      var courses = groupedByDates[date],
+          numVisitors = (courses[course] ? courses[course].length : 0);
+
       visits.push(numVisitors);
       if(max < numVisitors)
         max = numVisitors;
     });
 
-    myNewChart = new Chart(ctx).Bar(data, {scaleOverride: true, scaleStepWidth: Math.ceil(max/20), scaleSteps: 20});
+    new Chart(ctx).Bar(data, {scaleOverride: true,
+      scaleStepWidth: Math.ceil(max/20), scaleSteps: 20});
   }
 
-  $.ajax({
-    url: "https://hackbulgaria.com/api/checkins/"
-  })
+  $.getJSON("https://hackbulgaria.com/api/checkins/")
   .done(function(data) {
     all_students = data;
-
-    getPerDayData(all_students, current_course, current_group, chart_type);
+    processData(all_students, current_course, current_group, chart_type);
   });
 
   function hasCourse(student) {
@@ -119,20 +125,22 @@ $(function() {
           }
         });
 
-        if(student_course && (group == 0 || (group != 0 && student_course.group == group))) {
+        if(student_course
+          && (group == GROUP_ALL || (group != GROUP_ALL
+            && student_course.group == group))) {
 
           var key;
 
-          if(type == "month") {
+          if(type == TYPE_MONTH) {
             var date = new Date(Date.parse(student.date));
             key = months[date.getMonth()];
           }
-          else if(type == "week") {
+          else if(type == TYPE_WEEK) {
             var week = Math.floor((Date.parse(student.date)
-              - Date.parse("2014-05-26")) / (1000 * 60 * 60 * 24 * 7)) - 1;
+              - FIRST_LECTURE_TIMESTAMP) / MILLIS_IN_A_WEEK) - 1;
             key = "Week "+week;
           }
-          else if(type == "day") {
+          else if(type == TYPE_DAY) {
             key = student.date;
           }
 
