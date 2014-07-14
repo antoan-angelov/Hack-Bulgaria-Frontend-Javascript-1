@@ -10,27 +10,80 @@
   #btn-java {
     margin-right: 15px;
   }
+
+  canvas {
+    display: block;
+    float:left;
+  }
+
+  #button-cont {
+    float:left;
+  }
+
+  .btn-group {
+    display: block;
+  }
+
+  #button-cont div:nth-child(2) {
+    position:relative; 
+    top:10px;
+  }
+
+  #button-cont div:nth-child(3) {
+     position:relative; 
+     top: 20px;
+     float: left;
+  }
   </style>
 </head>
 <body>
 
-<div id="button-cont">
-  <button type="button" id="btn-js" class="btn btn-primary">Frontend JavaScript</button>
-  <button type="button" id="btn-java" class="btn btn-primary">Core Java</button>
+  <canvas id="myChart" width="800" height="400"></canvas>
 
-  <label class="checkbox-inline">
-    <input type="checkbox" id="group1" value="group1" checked> Day Group
-  </label>
-  <label class="checkbox-inline">
-    <input type="checkbox" id="group2" value="group2" checked> Night Group
-  </label>
-</div>
+  <div id="button-cont">
+    <div>
+      Course:
+      <div class="btn-group" data-toggle="buttons">
+        <label class="btn btn-primary active">
+          <input type="radio" name="courses" id="option1" value="Frontend JavaScript" checked> Frontend JavaScript
+        </label>
+        <label class="btn btn-primary">
+          <input type="radio" name="courses" id="option2" value="Core Java"> Core Java
+        </label>
+      </div>
+    </div>
 
-<canvas id="myChart" width="800" height="400"></canvas>
+    <div>
+      Group:
+      <div class="btn-group" data-toggle="buttons">
+        <label class="btn btn-primary active">
+          <input type="checkbox" id="group1" value="group1" checked> Early Group
+        </label>
+        <label class="btn btn-primary active">
+          <input type="checkbox" id="group2" value="group2" checked> Late Group
+        </label>
+      </div>
+    </div>
 
-<script src="bower_components/jquery/dist/jquery.min.js"></script>
-<script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
-<script src="bower_components/chartjs/Chart.min.js"></script>
-<script src="main.js"></script>
+    <div>
+      Chart type:
+      <div class="btn-group" data-toggle="buttons">
+        <label class="btn btn-primary active">
+          <input type="radio" name="types" id="option1" value="day" checked> Day
+        </label>
+        <label class="btn btn-primary">
+          <input type="radio" name="types" id="option2" value="week"> Week
+        </label>
+        <label class="btn btn-primary">
+          <input type="radio" name="types" id="option2" value="month"> Month
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <script src="bower_components/jquery/dist/jquery.min.js"></script>
+  <script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+  <script src="bower_components/chartjs/Chart.min.js"></script>
+  <script src="main.js"></script>
 </body>
 </html>

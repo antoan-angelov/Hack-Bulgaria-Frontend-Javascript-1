@@ -7,6 +7,7 @@ $(function() {
   var groups = [COURSE_JS, COURSE_JAVA];
   var current_course = COURSE_JS;
   var current_group = 0;
+  var chart_type = "day";
   var months = ["January", "February", "March", "April",
     "May", "June", "July", "August", "September", "October", "November", "December"];
 
@@ -14,14 +15,14 @@ $(function() {
   var ctx = $("#myChart").get(0).getContext("2d");
   var myNewChart;
 
-  $("#btn-js").click(function(){
-    current_course = COURSE_JS;
-    getPerDayData(all_students, current_course, current_group, "day");
+  $("input[name=courses]").change(function () {
+    current_course = $(this).val();
+    getPerDayData(all_students, current_course, current_group, chart_type);
   });
 
-  $("#btn-java").click(function(){
-    current_course = COURSE_JAVA;
-    getPerDayData(all_students, current_course, current_group, "month");
+  $("input[name=types]").change(function () {
+    chart_type = $(this).val();
+    getPerDayData(all_students, current_course, current_group, chart_type);
   });
 
   $("input[type='checkbox']").on('change', function(){
@@ -38,7 +39,7 @@ $(function() {
       current_group = 0;
     }
 
-    getPerDayData(all_students, current_course, current_group, "month");
+    getPerDayData(all_students, current_course, current_group, chart_type);
   });
 
   function addDataset(datasets, name, data) {
@@ -54,7 +55,6 @@ $(function() {
 
   function getPerDayData(students, course, group, type) {
     var groupedByDates = groupBy(all_students, course, group, type);
-    console.log(course, group, groupedByDates)
     var dates = Object.keys(groupedByDates);
     var recentDates = dates.slice(dates.length-5);
     var visits = [];
@@ -83,7 +83,7 @@ $(function() {
   .done(function(data) {
     all_students = data;
 
-    getPerDayData(all_students, "Core Java", 0, "week");
+    getPerDayData(all_students, current_course, current_group, chart_type);
   });
 
   function hasCourse(student) {
