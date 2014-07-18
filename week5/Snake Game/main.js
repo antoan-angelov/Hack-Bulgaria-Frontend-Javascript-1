@@ -12,6 +12,7 @@ $(function() {
       timerId = -1,
       points = 0,
       playing = false,
+      isPaused = false,
       reverse = false;
 
   if(!localStorage.scores)
@@ -67,9 +68,9 @@ $(function() {
     localStorage.snake_color = snake_color;
     snake.setSpeed(parseInt(snake_speed, 10));
     snake.setColor(snake_color);
+
     if(playing) {
       pause();
-      resume();
     }
 
     if(reverse) {
@@ -85,19 +86,51 @@ $(function() {
       reverse = true;
   });
 
-  function pause() {
-    if(timerId != -1)
+  function pause(byUser) {
+    console.log("pause")
+    if(timerId != -1) {
       clearInterval(timerId);
-    timerId = -1;
+      timerId = -1;
+    }
+
+    if(byUser) {
+      isPaused = true;
+
+      if(labelTimer != -1) {
+        clearInterval(labelTimer);
+        labelTimer = -1;
+      }
+      timerId = -1;
+      visible = true;
+      labelTimer = setInterval(function() {
+        visible = !visible;
+        render();
+      }, 700);
+
+      render();
+    }
   }
 
-  function resume() {
+  function resume(byUser) {
+console.log("resume")
     if(timerId == -1)
       timerId = setInterval(loop, 1000 / fps);
+
+    if(labelTimer != -1) {
+        clearInterval(labelTimer);
+        labelTimer = -1;
+      }
+
+    if(byUser) {
+      isPaused = false;
+      visible = false;
+    }
   }
 
   function pressAnyKeyToContinue() {
     visible = true;
+    if(labelTimer != -1)
+      clearInterval(labelTimer);
     labelTimer = setInterval(function() {
       visible = !visible;
       render();
@@ -329,9 +362,9 @@ $(function() {
         break;
       case "pause":
         if(timerId != -1)
-          pause();
+          pause(true);
         else
-          resume();
+          resume(true);
         break;
       case "reverse":
         snake.reverse();
@@ -373,13 +406,22 @@ $(function() {
     snake.draw();
     treat.draw();
 
-    if(visible) {
-      var fillStyle = ctx.fillStyle;
-      ctx.fillStyle = "white";
-      ctx.font = "25px myFont";
-      ctx.fillText("Press Any Key", 50, 190);
-      ctx.fillStyle = fillStyle;
-    }
+    makeText("Score: "+points, 10, 10, 15);
+    makeText("Press P to " + (isPaused ? "unpause" : "pause"), 10,
+      (isPaused ? 230 : 250), 15);
+
+    if(isPaused && visible)
+      makeText("Game Paused", 25, 70, 190);
+    else if(visible)
+      makeText("Press Any Key", 25, 50, 190);
+  }
+
+  function makeText(text, size, x, y) {
+    var fillStyle = ctx.fillStyle;
+    ctx.fillStyle = "white";
+    ctx.font = size+"px myFont";
+    ctx.fillText(text, x, y);
+    ctx.fillStyle = fillStyle;
   }
 
   function initKeyboardController(callback) {
