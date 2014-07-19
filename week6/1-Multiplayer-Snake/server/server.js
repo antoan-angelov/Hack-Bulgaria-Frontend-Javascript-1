@@ -1,7 +1,6 @@
 var
   _ = require("lodash"),
-  express = require("express"),
-  app = express(),
+  app = require('express')(),
   http = require('http').Server(app),
   io = require('socket.io')(http),
   bodyParser = require("body-parser"),
@@ -9,23 +8,15 @@ var
   gameIdToPlayers = {}, // gameId -> [host, player2]
   connectedClients = {}; // socketId -> socket
 
-app.use(express.static(__dirname + '/public'));
-
 function emitTo(sockets, message, data) {
-  if(message === "render")
-    console.log("emitTo", sockets, message, data, Object.keys(connectedClients).length)
-  sockets.forEach(function(socket, index) {
+  sockets.forEach(function(socket) {
     if(typeof socket === "string") {
       socket = connectedClients[socket];
-      //if(message === "render")
-      //  console.log("inside emit loop "+index, socket)
     }
-    //if(message != "render")
     socket.emit(message, data);
   });
-  if(message === "render")
-    console.log("emit end")
 }
+
 function socketConnected(socket) {
   console.log("Socket with id: %s connected", socket.id);
   connectedClients[socket.id] = socket;
@@ -84,12 +75,10 @@ function createGameId(playerName, socketId) {
 }
 
 io.on('connection', function(socket){
-
   socketConnected(socket);
 
   socket.on("move", function(data) {
     var gameId = data.gameId;
-    console.log("server move event", data, gameIdToPlayers[gameId], gameIdToPlayers);
     if(gameIdToPlayers[gameId]) {
       emitTo(_.pluck(gameIdToPlayers[gameId], "socketId"), "render", data);
     }
@@ -111,12 +100,11 @@ app.all("*", function(req, res, next) {
 
 app.use(bodyParser.json());
 
-/*app.get("/", function(req, res) {
-  res.sendfile('index.html');
-});*/
+app.get("/", function(req, res) {
+  res.send("HELLO!");
+});
 
 app.post("/createGame", function(req, res) {
-  console.log("create game triggered", req.body);
   var
     playerName = req.body.playerName,
     socketId = req.body.socketId,

@@ -48,7 +48,7 @@ $(function() {
 
   socket.on("connect", function(data) {
     socketId = socket.io.engine.id;
-
+console.log("socket connected")
     updateMatches();
 
     if(!localStorage.playerName) {
@@ -62,7 +62,7 @@ $(function() {
     }
 
     socket.on('render', function(data){
-      console.log("render event", data);
+      //console.log("render event", data);
       if(onRenderCallback)
         onRenderCallback(data);
     });
@@ -106,9 +106,7 @@ function updateMatches() {
     return;
   }
 
-  $.getJSON("/games", function(data) {
-    console.log("games: ", data);
-
+  $.getJSON("http://10.0.2.15:3000/games", function(data) {
     var matches = [];
     for(var key in data) {
       var host = _.find(data[key], function (x) { return x.isHost })
@@ -120,7 +118,7 @@ function updateMatches() {
 
     $(".join-match").click(function() {
       gameId = $(this).data("game-id");
-      post("/joinGame", {
+      post("http://10.0.2.15:3000/joinGame", {
         "playerName": localStorage.playerName,
         "socketId": socketId,
         "gameId" : gameId
@@ -142,7 +140,7 @@ function updateMatches() {
 
 $("#host-match").click(function() {
   console.log("hosts match click")
-  post("/createGame", {
+  post("http://10.0.2.15:3000/createGame", {
     "playerName": localStorage.playerName,
     "socketId": socketId
   },
@@ -159,7 +157,7 @@ $("#host-match").click(function() {
 
 function emitMove(data) {
   data.gameId = gameId;
-  console.log("emitting data", data);
+  //console.log("emitting data", data);
   socket.emit('move', data);
 }
 

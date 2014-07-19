@@ -5,25 +5,24 @@ $(function() {
       UNIT_TO_PX = 10,
       W = $canvas.width()/UNIT_TO_PX,
       H = $canvas.height() / UNIT_TO_PX,
-      fps = 1,
+      fps = 6,
       snake,
       guestSnake,
       background,
       treat,
       timerId = -1,
-      points = 0,
       playing = false,
       isPaused = false,
       reverse = false,
       ignoreKeyboard = true,
       playerSnake,
-      opponentSnake;
-
-      var test = false;
+      opponentSnake,
+      hostColor = "#5EFF71",
+      guestColor = "yellow";
 
   $("#btn-settings").click(function() {
     pause();
-    $("#modal-points").text(points);
+    $("#modal-points").text(playerSnake.getPoints());
   });
 
   $('#myModal').on('hidden.bs.modal', function() {
@@ -124,16 +123,14 @@ $(function() {
     pressAnyKeyToContinue();
 
     pause();
-    points = 0;
     reverse = false;
-    snake = new Snake(c, 2, 18, "#5EFF71", 2);
-    guestSnake = new Snake(c, 2, 22, "blue", 2);
+    snake = new Snake(c, 2, 18, hostColor);
+    guestSnake = new Snake(c, 2, 22, guestColor);
     var grass = document.createElement("IMG");
     grass.src = 'grass.png';
     background = new Background(c, grass);
     var bullet = document.createElement("IMG");
-    treat = new Treat(0, 0, c, bullet);
-    treat.randomize();
+    treat = new Treat(-1, -1, c, bullet);
 
     grass.onload = function() {
       bullet.src = 'bullet.png';
@@ -152,6 +149,9 @@ $(function() {
 
   Tile.prototype.draw = function() {
 
+    if(this.x < 0 || this.y < 0 || this.x >= W || this.y >= H)
+      return;
+
     if(!this.texture)
       ctx.fillRect(this.x * UNIT_TO_PX, this.y * UNIT_TO_PX, UNIT_TO_PX, UNIT_TO_PX);
     else {
@@ -161,6 +161,7 @@ $(function() {
 
   function Treat(x, y, context, texture) {
 
+    var that = this;
     this.x = x;
     this.y = y;
     this.context = context;
@@ -170,18 +171,23 @@ $(function() {
       var x = Math.floor(Math.random() * W),
         y = Math.floor(Math.random() * H);
 
-      this.x = x;
-      this.y = y;
+      that.x = x;
+      that.y = y;
+    }
+
+    this.restore = function(data) {
+      that.x = data.x;
+      that.y = data.y;
     }
   }
 
   Treat.prototype.draw = Tile.prototype.draw;
 
-  function Snake(context, headX, headY, color, speed) {
+  function Snake(context, headX, headY, color) {
     var that = this;
     this.context = context;
     this.color = color;
-    this.speed = speed;
+    this.points = 0;
     this.state = "alive";
     this.dir = {x: 1, y: 0};
     this.oldDir = {x: 1, y: 0};
@@ -190,86 +196,77 @@ $(function() {
                   new Tile(headX+2-2, headY+0, context)];
 
     this.isAlive = function() {
-      return this.state === "alive";
+      return that.state === "alive";
+    }
+
+    this.getPoints = function() {
+      return that.points;
+    }
+
+    this.addPoints = function() {
+      that.points++;
+    }
+
+    this.setPoints = function(pts) {
+      that.points = pts;
     }
 
     this.getColor = function() {
-      return this.color;
+      return that.color;
     }
 
     this.setColor = function(color) {
-      this.color = color;
+      that.color = color;
     };
 
     this.reverse = function() {
-      this.tiles.reverse();
-      this.dir.x *= -1;
-      this.dir.y *= -1;
+      that.tiles.reverse();
+      that.dir.x *= -1;
+      that.dir.y *= -1;
     };
 
-    this.getSpeed = function() {
-      return this.speed;
-    }
-
-    this.setSpeed = function(speed) {
-      that.speed = speed;
-      switch(speed) {
-        case 1:
-          fps = 6;
-          break;
-        case 2:
-          fps = 10;
-          break;
-        case 3:
-          fps = 20;
-          break;
-      }
-    }
-
-    this.setSpeed(this.speed);
-
     this.setAlive = function(alive) {
-      this.state = (alive ? "alive" : "dead");
+      that.state = (alive ? "alive" : "dead");
     }
 
     this.update = function() {
-      if(!this.isAlive())
+      if(!that.isAlive())
         return;
 
-      var head = this.tiles[this.tiles.length-1],
-          newX = head.x + this.dir.x,
-          newY = head.y + this.dir.y;
+      var head = that.tiles[that.tiles.length-1],
+          newX = head.x + that.dir.x,
+          newY = head.y + that.dir.y;
 
-      if(!this.collidesWithWall(newX, newY)
-          && !this.collidesWithSelf(newX, newY)) {
+      if(!that.collidesWithWall(newX, newY)
+          && !that.collidesWithSelf(newX, newY)) {
 
-        var popped = this.tiles.shift();
+        var popped = that.tiles.shift();
         popped.x = newX;
         popped.y = newY;
-        this.tiles.push(popped);
+        that.tiles.push(popped);
       }
       else {
-        this.setAlive(false);
+        that.setAlive(false);
         //playing = false;
         //$("#modal-died-score").text(points);
         //$('#enterNameModal').modal("show");
       }
 
-      if(this.checkTreat()) {
+      if(that.checkTreat()) {
         treat.randomize();
-        points++;
-        var tail = this.tiles[0];
+        playerSnake.addPoints();
+        var tail = that.tiles[0];
         var newTail = new Tile(tail.x, tail.y, context);
-        this.tiles.unshift(newTail);
+        that.tiles.unshift(newTail);
       }
 
-      this.oldDir.x = this.dir.x;
-      this.oldDir.y = this.dir.y;
+      that.oldDir.x = that.dir.x;
+      that.oldDir.y = that.dir.y;
     };
 
     this.collidesWithSelf = function(x, y) {
       var res = false;
-      this.tiles.forEach(function(tile) {
+      that.tiles.forEach(function(tile) {
         if(x == tile.x && y == tile.y)
           res = true;
       });
@@ -282,23 +279,34 @@ $(function() {
     }
 
     this.checkTreat = function() {
-      var head = this.tiles[this.tiles.length-1];
+      var head = that.tiles[that.tiles.length-1];
       return (head.x == treat.x && head.y == treat.y);
     }
 
     this.restoreSections = function(sections) {
-      this.tiles = [];
-      sections.forEach(function(section) {
-        var tile = new Tile(section.x, section.y, that.context);
-        this.tiles.push(tile);
-        console.log("tile=", tile)
+
+      if(sections.length > that.tiles.length) {
+        var diff = sections.length - that.tiles.length;
+        for(var i=0; i<diff; i++) {
+          that.tiles.push(new Tile(0, 0, that.context));
+        }
+      }
+      else if(sections.length < that.tiles.length) {
+        var diff = sections.length - that.tiles.length;
+        that.tiles = that.tiles.slice(0, diff);
+      }
+
+      sections.forEach(function(section, index) {
+        var tile = that.tiles[index];
+        tile.x = section.x;
+        tile.y = section.y;
       });
     }
 
     this.getSections = function() {
 
       var sections = [];
-      this.tiles.forEach(function(tile) {
+      that.tiles.forEach(function(tile) {
         sections.push({x: tile.x, y: tile.y});
       });
 
@@ -306,19 +314,19 @@ $(function() {
     }
 
     this.draw = function() {
-      if(!this.isAlive()) {
+      if(!that.isAlive()) {
         ctx.fillStyle = "red"
       }
       else {
-        ctx.fillStyle = this.color;
+        ctx.fillStyle = that.color;
       }
 
-      this.tiles.forEach(function(tile) {
+      that.tiles.forEach(function(tile) {
         tile.draw();
       });
 
-      if(!this.isAlive()) {
-        ctx.fillStyle = this.color;
+      if(!that.isAlive()) {
+        ctx.fillStyle = that.color;
       }
     };
   }
@@ -382,16 +390,25 @@ $(function() {
 
   function update() {
     playerSnake.update();
-    //guestSnake.update();
 
+    sync();
+  }
+
+  function sync() {
     var data = {};
-    data.snake = (isHost ? "host" : "guest");
-    data.snakeSections = playerSnake.getSections();
-    data.snakePoints = points;
+    data.hostSnake = {};
+    data.hostSnake.sections = snake.getSections();
+    data.hostSnake.alive = snake.isAlive();
+    data.hostSnake.points = snake.getPoints();
 
-    if(!test)
-      emitMove(data);
-    test = true;
+    data.guestSnake = {};
+    data.guestSnake.sections = guestSnake.getSections();
+    data.guestSnake.alive = guestSnake.isAlive();
+    data.guestSnake.points = guestSnake.getPoints();
+
+    data.treat = {x: treat.x, y:treat.y};
+
+    emitMove(data);
   }
 
   var visible;
@@ -404,8 +421,8 @@ $(function() {
     guestSnake.draw();
     treat.draw();
 
-    makeText((!player1 ? "Player1: " : player1+": ")+points, 10, 10, 15);
-    makeText((!player2 ? "Player2: " : player2+": ")+points, 10, 10, 35);
+    makeText((!player1 ? "Player 1: " : player1+": ")+(snake ? snake.getPoints() : 0), 10, 10, 15, hostColor);
+    makeText((!player2 ? "Player 2: " : player2+": ")+(guestSnake ? guestSnake.getPoints() : 0), 10, 10, 35, guestColor);
 
     if(isPaused && visible)
       makeText("Game Paused", 25, 270, 190);
@@ -413,9 +430,13 @@ $(function() {
       makeText("Press Any Key", 25, 250, 190);
   }
 
-  function makeText(text, size, x, y) {
+  function makeText(text, size, x, y, color) {
+
+    if(!color)
+      color = "white";
+
     var fillStyle = ctx.fillStyle;
-    ctx.fillStyle = "white";
+    ctx.fillStyle = color;
     ctx.font = size+"px myFont";
     ctx.fillText(text, x, y);
     ctx.fillStyle = fillStyle;
@@ -435,17 +456,41 @@ $(function() {
   }
 
   onGameStart(function() {
+    console.log("onGameStart callback")
     ignoreKeyboard = false;
     playerSnake = (isHost ? snake : guestSnake);
     opponentSnake = (isHost ? guestSnake : snake);
+    if(isHost) {
+      treat.randomize();
+      sync();
+    }
   });
 
   onRender(function(data) {
-    if((isHost && data.snake === "host") || (!isHost && data.snake === "guest"))
-      return;
+    /*data.hostSnake = {};
+    data.hostSnake.sections = snake.getSections();
+    data.hostSnake.points = 7;
 
-    opponentSnake.restoreSections(data.snakeSections);
+    data.guestSnake = {};
+    data.guestSnake.sections = guestSnake.getSections();
+    data.guestSnake.points = 7;
 
+    data.treat = {x: treat.x, y:treat.y};*/
+    //if((isHost && data.snake === "host") || (!isHost && data.snake === "guest"))
+    //  return;
+
+    if(!isHost) {
+      snake.restoreSections(data.hostSnake.sections);
+      snake.setAlive(data.hostSnake.alive);
+      snake.setPoints(data.hostSnake.points);
+    }
+    else {
+      guestSnake.restoreSections(data.guestSnake.sections);
+      guestSnake.setAlive(data.guestSnake.alive);
+      guestSnake.setPoints(data.guestSnake.points);
+    }
+    treat.restore(data.treat);
+    //console.log("render event", data.treat)
   });
 
   startGame();
