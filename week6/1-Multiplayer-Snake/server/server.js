@@ -12,13 +12,19 @@ var
 app.use(express.static(__dirname + '/public'));
 
 function emitTo(sockets, message, data) {
-  sockets.forEach(function(socket) {
+  if(message === "render")
+    console.log("emitTo", sockets, message, data, Object.keys(connectedClients).length)
+  sockets.forEach(function(socket, index) {
     if(typeof socket === "string") {
       socket = connectedClients[socket];
+      //if(message === "render")
+      //  console.log("inside emit loop "+index, socket)
     }
+    //if(message != "render")
     socket.emit(message, data);
   });
-
+  if(message === "render")
+    console.log("emit end")
 }
 function socketConnected(socket) {
   console.log("Socket with id: %s connected", socket.id);
@@ -83,6 +89,7 @@ io.on('connection', function(socket){
 
   socket.on("move", function(data) {
     var gameId = data.gameId;
+    console.log("server move event", data, gameIdToPlayers[gameId], gameIdToPlayers);
     if(gameIdToPlayers[gameId]) {
       emitTo(_.pluck(gameIdToPlayers[gameId], "socketId"), "render", data);
     }
