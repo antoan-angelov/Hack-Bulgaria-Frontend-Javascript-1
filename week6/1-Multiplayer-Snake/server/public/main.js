@@ -53,44 +53,22 @@ $(function() {
       reverse = true;
   });
 
-  function pause(byUser) {
+  function pause() {
 
     if(timerId != -1) {
       clearInterval(timerId);
       timerId = -1;
     }
-
-    if(byUser) {
-      isPaused = true;
-
-      if(labelTimer != -1) {
-        clearInterval(labelTimer);
-        labelTimer = -1;
-      }
-      timerId = -1;
-      visible = true;
-      labelTimer = setInterval(function() {
-        visible = !visible;
-        render();
-      }, 700);
-
-      render();
-    }
   }
 
-  function resume(byUser) {
+  function resume() {
 
     if(timerId == -1)
-      timerId = setInterval(loop, 1000 / fps);
+      startLoop();
 
     if(labelTimer != -1) {
-        clearInterval(labelTimer);
-        labelTimer = -1;
-      }
-
-    if(byUser) {
-      isPaused = false;
-      visible = false;
+      clearInterval(labelTimer);
+      labelTimer = -1;
     }
   }
 
@@ -100,7 +78,6 @@ $(function() {
       clearInterval(labelTimer);
     labelTimer = setInterval(function() {
       visible = !visible;
-      console.log("labelTimer", visible)
       render();
     }, 700);
     $(document).unbind('keydown');
@@ -123,11 +100,15 @@ $(function() {
     });
   }
 
+  function startLoop() {
+    timerId = setInterval(loop, 1000 / fps);
+  }
+
   function startGame() {
     playing = false;
     pressAnyKeyToContinue();
-timerId = setInterval(loop, 1000 / fps);
-    //pause();
+    startLoop();
+
     reverse = false;
     snake = new Snake(c, 2, 18, hostColor);
     guestSnake = new Snake(c, 2, 22, guestColor);
@@ -173,8 +154,8 @@ timerId = setInterval(loop, 1000 / fps);
     this.texture = texture;
 
     this.randomize = function() {
-      var x = Math.floor(Math.random() * (W-1),
-        y = Math.floor(Math.random() * (H-1));
+      var x = Math.floor(Math.random() * (W-1)),
+          y = Math.floor(Math.random() * (H-1));
 
       that.x = x;
       that.y = y;
@@ -510,7 +491,6 @@ timerId = setInterval(loop, 1000 / fps);
   }
 
   onGameStart(function() {
-    console.log("onGameStart callback")
     ignoreKeyboard = false;
     playerSnake = (isHost ? snake : guestSnake);
     opponentSnake = (isHost ? guestSnake : snake);
@@ -522,17 +502,6 @@ timerId = setInterval(loop, 1000 / fps);
   });
 
   onRender(function(data) {
-    /*data.hostSnake = {};
-    data.hostSnake.sections = snake.getSections();
-    data.hostSnake.points = 7;
-
-    data.guestSnake = {};
-    data.guestSnake.sections = guestSnake.getSections();
-    data.guestSnake.points = 7;
-
-    data.treat = {x: treat.x, y:treat.y};*/
-    //if((isHost && data.snake === "host") || (!isHost && data.snake === "guest"))
-    //  return;
 
     if(!isHost) {
       snake.restoreSections(data.hostSnake.sections);
@@ -545,7 +514,6 @@ timerId = setInterval(loop, 1000 / fps);
       guestSnake.setPoints(data.guestSnake.points);
     }
     treat.restore(data.treat);
-    //console.log("render event", data.treat)
   });
 
   startGame();
