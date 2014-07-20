@@ -100,12 +100,17 @@ $(function() {
       clearInterval(labelTimer);
     labelTimer = setInterval(function() {
       visible = !visible;
+      console.log("labelTimer", visible)
       render();
     }, 700);
     $(document).unbind('keydown');
     initKeyboardController(function() {
       if(ignoreKeyboard)
         return;
+
+      playerSnake.resetStarveTimer();
+      playerSnake.unlock();
+      opponentSnake.unlock();
 
       playing = true;
       visible = false;
@@ -121,8 +126,8 @@ $(function() {
   function startGame() {
     playing = false;
     pressAnyKeyToContinue();
-
-    pause();
+timerId = setInterval(loop, 1000 / fps);
+    //pause();
     reverse = false;
     snake = new Snake(c, 2, 18, hostColor);
     guestSnake = new Snake(c, 2, 22, guestColor);
@@ -168,8 +173,8 @@ $(function() {
     this.texture = texture;
 
     this.randomize = function() {
-      var x = Math.floor(Math.random() * W),
-        y = Math.floor(Math.random() * H);
+      var x = Math.floor(Math.random() * (W-1),
+        y = Math.floor(Math.random() * (H-1));
 
       that.x = x;
       that.y = y;
@@ -184,16 +189,41 @@ $(function() {
   Treat.prototype.draw = Tile.prototype.draw;
 
   function Snake(context, headX, headY, color) {
+
     var that = this;
     this.context = context;
+    this.locked = true;
     this.color = color;
     this.points = 0;
     this.state = "alive";
     this.dir = {x: 1, y: 0};
+    that.timeLeft = Snake.STARVE_TIMEOUT;
     this.oldDir = {x: 1, y: 0};
     this.tiles = [new Tile(headX+0-2, headY+0, context),
                   new Tile(headX+1-2, headY+0, context),
                   new Tile(headX+2-2, headY+0, context)];
+
+    this.resetStarveTimer = function() {
+      if(that.starveTimer)
+        clearInterval(that.starveTimer);
+      that.timeLeft = Snake.STARVE_TIMEOUT;
+      that.starveTimer = setInterval(function() {
+        that.timeLeft--;
+
+        if(that.starveTimer && that.timeLeft == 0) {
+          clearInterval(that.starveTimer);
+          that.setAlive(false);
+        }
+      }, 1000);
+    }
+
+    this.unlock = function() {
+      that.locked = false;
+    }
+
+    this.getStarveSecondsLeft = function() {
+      return that.timeLeft;
+    }
 
     this.isAlive = function() {
       return that.state === "alive";
@@ -230,7 +260,7 @@ $(function() {
     }
 
     this.update = function() {
-      if(!that.isAlive())
+      if(!that.isAlive() || that.locked)
         return;
 
       var head = that.tiles[that.tiles.length-1],
@@ -253,6 +283,7 @@ $(function() {
       }
 
       if(that.checkTreat()) {
+        that.resetStarveTimer();
         treat.randomize();
         playerSnake.addPoints();
         var tail = that.tiles[0];
@@ -331,6 +362,8 @@ $(function() {
     };
   }
 
+  Snake.STARVE_TIMEOUT = 30;
+
   Snake.prototype.keyboardHandler = function(dir) {
     switch(dir) {
       case "up":
@@ -389,7 +422,8 @@ $(function() {
 
 
   function update() {
-    playerSnake.update();
+    if(playerSnake)
+      playerSnake.update();
 
     sync();
   }
@@ -424,10 +458,30 @@ $(function() {
     makeText((!player1 ? "Player 1: " : player1+": ")+(snake ? snake.getPoints() : 0), 10, 10, 15, hostColor);
     makeText((!player2 ? "Player 2: " : player2+": ")+(guestSnake ? guestSnake.getPoints() : 0), 10, 10, 35, guestColor);
 
+    makeText((playerSnake ? formatString(playerSnake.getStarveSecondsLeft()) : formatString(Snake.STARVE_TIMEOUT)), 25, 350, 25);
+
     if(isPaused && visible)
       makeText("Game Paused", 25, 270, 190);
     else if(visible)
       makeText("Press Any Key", 25, 250, 190);
+
+    if(opponentSnake && !opponentSnake.isAlive()) {
+      makeText("YOU WIN", 25, 330, 190);
+      if(timerId != -1)
+        pause();
+    }
+    else if(playerSnake && !playerSnake.isAlive()) {
+      makeText("YOU LOSE", 25, 300, 190);
+      if(timerId != -1)
+        pause();
+    }
+  }
+
+  function formatString(num) {
+    var mins = Math.floor(num / 60), secs = num % 60;
+    mins = (mins < 10 ? "0"+mins : mins+"");
+    secs = (secs < 10 ? "0"+secs : secs+"");
+    return mins + ":" + secs;
   }
 
   function makeText(text, size, x, y, color) {
@@ -460,6 +514,7 @@ $(function() {
     ignoreKeyboard = false;
     playerSnake = (isHost ? snake : guestSnake);
     opponentSnake = (isHost ? guestSnake : snake);
+
     if(isHost) {
       treat.randomize();
       sync();
