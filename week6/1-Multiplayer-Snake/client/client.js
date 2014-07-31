@@ -1,6 +1,11 @@
 "use strict";
 
-var socket = new io("http://burta.hackbulgaria.com:3000"),
+if(!localStorage.server)
+  localStorage.server = "http://burta.hackbulgaria.com:3000"; //http://10.0.2.15:3000
+
+var
+    SERVER_BASE = localStorage.server,
+    socket = new io(SERVER_BASE),
     gameId,
     socketId,
     isHost = false,
@@ -106,7 +111,7 @@ function updateMatches() {
     return;
   }
 
-  $.getJSON("https://burta.hackbulgaria.com:3000/games", function(data) {
+  $.getJSON(SERVER_BASE+"/games", function(data) {
     var matches = [];
     for(var key in data) {
       var host = _.find(data[key], function (x) { return x.isHost })
@@ -118,7 +123,7 @@ function updateMatches() {
 
     $(".join-match").click(function() {
       gameId = $(this).data("game-id");
-      post("http://burta.hackbulgaria.com:3000/joinGame", {
+      post(SERVER_BASE+"/joinGame", {
         "playerName": localStorage.playerName,
         "socketId": socketId,
         "gameId" : gameId
@@ -140,7 +145,7 @@ function updateMatches() {
 
 $("#host-match").click(function() {
   console.log("hosts match click")
-  post("http://burta.hackbulgaria.com:3000/createGame", {
+  post(SERVER_BASE+"/createGame", {
     "playerName": localStorage.playerName,
     "socketId": socketId
   },

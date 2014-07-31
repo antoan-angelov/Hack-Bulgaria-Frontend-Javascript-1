@@ -20,6 +20,8 @@ $(function() {
       hostColor = "#5EFF71",
       guestColor = "yellow";
 
+  $("#modal-server").val(SERVER_BASE);
+
   $("#btn-settings").click(function() {
     pause();
     $("#modal-points").text(playerSnake.getPoints());
@@ -39,6 +41,8 @@ $(function() {
     if(playing) {
       pause();
     }
+
+    localStorage.server = $("#modal-server").val();
 
     if(reverse) {
       playerSnake.reverse();
