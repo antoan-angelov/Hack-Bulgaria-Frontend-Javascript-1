@@ -43,11 +43,13 @@ The game is won by the last snake to survive (meaning to eat often enough and no
 # How to run the game
 
 Before running the game, you must first prepare your server:
+
 1. From the source code, copy the server folder and paste it in your server.
 2. From the terminal, navigate to the server folder and run `npm install` and then `node server.js`
 3. If everything is successful, the terminal will say it's listening on port 3000.
 
 Now that the server side is up and running, you must prepare the clients as well:
+
 1. From the source code, copy the client folder and paste it in your client.
 2. From the terminal, navigate to the client folder and run `bower install`.
 3. Open `index.html` in the browser.
