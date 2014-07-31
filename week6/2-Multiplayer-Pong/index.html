@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+	<link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css">
+	<style>
+	#playground {
+		border: 5px black solid;
+	}
+	</style>
+</head>
+<body>
+
+  <canvas id="playground" width="800" height="400"></canvas>
+
+  <!-- Waiting for Oponent Modal -->
+  <div class="modal fade" id="waitingForOponent" data-keyboard="false" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-body">
+          <h4>Waiting for oponent...</h4>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Multiplayer Settings Modal -->
+  <div class="modal fade" id="multiplayerSettings" data-keyboard="false" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title">Multiplayer Settings</h4>
+        </div>
+        <div class="modal-body">
+
+          <button type="button" id="host-match" class="btn btn-default btn-lg">Host match</button>
+          <h4>Or join one of the available matches: </h4>
+          <table class="table table-striped" id="matchesTable">
+            <thead>
+              <tr>
+                <th>Host</th>
+                <th>Players</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              
+            </tbody>
+          </table>
+        </div>
+        <div class="modal-footer">
+        </div>
+      </div>
+    </div>
+  </div>
+
+   <!-- Choose Game Mode Modal -->
+  <div class="modal fade" id="chooseGameModeModal" tabindex="-1" data-keyboard="false" data-backdrop="static" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title">Choose game type</h4>
+        </div>
+        <div class="modal-body">
+          <button type="button" class="btn btn-primary" data-dismiss="modal" id="single-player">Single Player</button>
+          </p>
+          <button type="button" class="btn btn-primary" data-toggle="modal" id="multiplayer" data-target="#multiplayerSettings" data-dismiss="modal">Multiplayer</button>
+        </div>
+        <div class="modal-footer"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Enter Name Modal -->
+  <div class="modal fade" id="playerNameModal" tabindex="-1" data-keyboard="false" data-backdrop="static" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title">Enter your name</h4>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="modal-name">Your name:</label>
+            <input type="text" class="form-control" id="modal-username" placeholder="Enter your name">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="save-name" class="btn btn-primary">OK</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script id="match-template" type="text/x-handlebars-template">
+{{#each matches}}
+<tr>
+  <td>{{host}}</td>
+  <td>{{participants}}</td>
+  <td><button type="button" class="btn btn-default join-match" data-game-id="{{gameId}}">Join</button></td>
+</tr>
+{{/each}}
+</script>
+
+<script src="bower_components/jquery/dist/jquery.min.js"></script>
+<script src="bower_components/lodash/dist/lodash.min.js"></script>
+<script src="bower_components/socket.io-client/socket.io.js"></script>
+<script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+<script src="bower_components/handlebars/handlebars.min.js"></script>
+
+<script src="client.js"></script>
+<script src="main.js"></script>
+</body>
+</html>
